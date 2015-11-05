@@ -1,26 +1,18 @@
-REBAR = `which rebar`
+REBAR = `which rebar3`
 RELX = `which relx`
 
-
-all: deps compile
-
-deps:
-	@( $(REBAR) get-deps )
+all: compile
 
 compile:
 	@( $(REBAR) compile )
 
-rel:
-	@( $(RELX) -o rel )
-
 clean:
-	@( $(REBAR) clean && rm -rf rel/csi)
+	@( $(REBAR) clean)
 
-run:
-	@( erl -pa `pwd`/ebin deps/*/ebin -boot start_sasl -s csi -name csi@127.0.0.1)
+run: compile
+	@( erl -pa `pwd`/ebin _build/default/lib/*/ebin -boot start_sasl -s csi -name csi@127.0.0.1)
 
-erl:
-	@( erl -pa `pwd`/ebin deps/*/ebin -name csi@127.0.0.1 )
+erl: compile
+	@( erl -pa `pwd`/ebin _build/default/lib/*/ebin -name csi@127.0.0.1 )
 
-
-.PHONY: all deps compile clean run rel
+.PHONY: all compile clean run
