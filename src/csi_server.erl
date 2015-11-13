@@ -12,7 +12,7 @@
          code_change/3]).
 
 start_link() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, self(), []).
+    gen_server:start_link(?MODULE, self(), []).
 
 terminate(Pid) ->
     gen_server:call(Pid, terminate).
