@@ -8,6 +8,7 @@ start(_StartType, _StartParams) ->
   start_link(8080, "/ws").
 
 start_link(Port, Path) ->
+  application:ensure_all_started(cowboy),
   Dispatch = cowboy_router:compile([
     {'_', [
       {Path, csi_handler, []}
