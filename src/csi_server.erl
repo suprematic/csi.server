@@ -2,8 +2,6 @@
 
 -behaviour(gen_server).
 
--export([start_link/0, terminate/1, command/2]).
-
 -export([init/1,
          handle_call/3,
          handle_cast/2,
@@ -11,27 +9,23 @@
          terminate/2,
          code_change/3]).
 
-start_link() ->
-    gen_server:start_link(?MODULE, self(), []).
-
-terminate(Pid) ->
-    gen_server:call(Pid, terminate).
-
-command(Pid, Command) ->
-    gen_server:call(Pid, {command, Command}).
-
-init(Handler) ->
+init([Handler | _Other] = Args) ->
+    process_flag(trap_exit, true),
+    lager:info("~p init ~p -> ~p", [?MODULE, {self(), Handler}, Args]),
     self() ! {setup, #{self => self()}},
     {ok, Handler}.
 
 handle_call(terminate, _From, State) ->
   {stop, terminate, ok, State};
 
-handle_call({command, {call, Correlation, {Module, Function} = Call, Params}}, _From, State) ->
-  lager:info("incoming call request: (~p) ~p", [self(), Call]),
-  Result = erlang:apply(Module, Function, Params),
+handle_call({command, {call, {Correlation, Meta}, {Module, Function} = Call, Params}}, _From, Handler) ->
+  lager:info("~p incoming call request: ~p -> ~p | ~p", [?MODULE, {self(), Handler}, Meta, Call]),
+  Result = erlang:apply(Module, Function, Params), 
   self() ! {reply, {Correlation, Result}},
-  {reply, ok, State};
+  {reply, ok, Handler}; 
+
+handle_call({command, {call, Correlation, {Module, Function}, Params}}, From, Handler) ->
+  handle_call({command, {call, {Correlation, undefined}, {Module, Function}, Params}}, From, Handler);
 
 handle_call({command, {send, Pid, Message}}, _From, State) ->
   Pid ! Message,
@@ -49,7 +43,8 @@ handle_info(Message, Handler) ->
   Handler ! ToSend,
   {noreply, Handler}.
 
-terminate(_Reason, _State) ->
+terminate(Reason, Handler) ->
+    lager:info("~p terminate: ~p -> ~p", [?MODULE, {self(), Handler}, Reason]),
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
