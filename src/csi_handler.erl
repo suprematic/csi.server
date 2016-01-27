@@ -12,7 +12,7 @@ init(Req, [Module, Args, Options] = Opts) ->
 
 websocket_handle({binary, Data}, Req, Pid) ->
 	Decoded = erlang:binary_to_term(Data),
-  gen_server:call(Pid, {command, Decoded}),
+    gen_server:call(Pid, {command, Decoded}),
 	{ok, Req, Pid}.
 
 websocket_info(Info, Req, State) ->
