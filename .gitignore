@@ -2,3 +2,4 @@ deps
 log
 ebin
 _build
+/erl_crash.dump
