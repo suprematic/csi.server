@@ -5,7 +5,9 @@
     {registered, []},
     {applications, [
       kernel,
-      stdlib
+      stdlib,
+      lager,
+      cowboy
     ]},
     {mod, {csi_app, []}},
     {env, []}
