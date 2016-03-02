@@ -5,6 +5,7 @@
 
 
 start(_StartType, _StartParams) ->
+  %%"/admin/ws"
   start_link(8080, "/ws", {csi_server, [], []}).
 
 start_link(Port, Path, {Module, Args, Options}) ->
