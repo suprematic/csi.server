@@ -18,14 +18,11 @@ init([Handler | _Other] = Args) ->
 handle_call(terminate, _From, State) ->
   {stop, terminate, ok, State};
 
-handle_call({command, {call, {Correlation, Meta}, {Module, Function} = Call, Params}}, _From, Handler) ->
-  lager:info("~p incoming call request: ~p -> ~p | ~p", [?MODULE, {self(), Handler}, Meta, Call]),
+handle_call({command, {call, #{correlation := Correlation} = Header, {Module, Function} = Call, Params}}, _From, Handler) ->
+  lager:info("~p incoming call request: ~p -> ~p | ~p", [?MODULE, {self(), Handler}, Header, Call]),
   Result = erlang:apply(Module, Function, Params), 
   self() ! {reply, {Correlation, Result}},
-  {reply, ok, Handler}; 
-
-handle_call({command, {call, Correlation, {Module, Function}, Params}}, From, Handler) ->
-  handle_call({command, {call, {Correlation, undefined}, {Module, Function}, Params}}, From, Handler);
+  {reply, ok, Handler};
 
 handle_call({command, {send, Pid, Message}}, _From, State) ->
   Pid ! Message,
