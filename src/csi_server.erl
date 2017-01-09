@@ -18,7 +18,8 @@ terminate(Pid) ->
     gen_server:call(Pid, terminate).
 
 command(Pid, Command) ->
-    gen_server:call(Pid, {command, Command}).
+    gen_server:cast(Pid, {command, Command}),
+    ok.
 
 init(Handler) ->
     self() ! {setup, #{self => self()}},
@@ -27,15 +28,15 @@ init(Handler) ->
 handle_call(terminate, _From, State) ->
   {stop, terminate, ok, State};
 
-handle_call({command, {call, Correlation, {Module, Function} = Call, Params}}, _From, State) ->
-  lager:info("incoming call request: (~p) ~p", [self(), Call]),
-  Result = erlang:apply(Module, Function, Params),
-  self() ! {reply, {Correlation, Result}},
-  {reply, ok, State};
-
 handle_call({command, {send, Pid, Message}}, _From, State) ->
   Pid ! Message,
   {reply, ok, State}.
+
+handle_cast({command, {call, Correlation, {Module, Function} = Call, Params}}, State) ->
+    lager:info("incoming call request: (~p) ~p", [self(), Call]),
+    Result = erlang:apply(Module, Function, Params),
+    self() ! {reply, {Correlation, Result}},
+    {noreply, State};
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
